@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Management System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .server-status {
+            display: inline-block;
+            padding: 8px 20px;
+            background: #d4edda;
+            color: #155724;
+            border-radius: 50px;
+            margin-top: 15px;
+            font-weight: 500;
+        }
+
+        .nav {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .nav-btn {
+            padding: 15px 30px;
+            background: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            min-width: 120px;
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .nav-btn.active {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .section {
+            display: none;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .section h2 {
+            color: #333;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-card .number {
+            font-size: 3em;
+            font-weight: bold;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .btn:hover {
+            background: #45a049;
+        }
+
+        .design-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .design-option {
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .design-option.selected {
+            border-color: #4CAF50;
+            background: #f0f9f0;
+        }
+
+        .design-preview {
+            height: 80px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .design-wedding { background: linear-gradient(135deg, #d4af37 0%, #f5e6b3 100%); color: #8b7355; }
+        .design-birthday { background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%); color: #b13e3e; }
+        .design-graduation { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); }
+        .design-anniversary { background: linear-gradient(135deg, #e8b3b3 0%, #c48f8f 100%); color: #b13e3e; }
+        .design-corporate { background: linear-gradient(135deg, #283048 0%, #859398 100%); }
+        .design-party { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+
+        .events-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .event-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .event-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .event-actions button {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            color: white;
+        }
+
+        .btn-add { background: #28a745; }
+        .btn-view { background: #4a90e2; }
+        .btn-delete { background: #dc3545; }
+
+        .guest-item {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 4px solid #ffc107;
+        }
+
+        .guest-item.checked-in {
+            border-left-color: #28a745;
+        }
+
+        .guest-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-checked { background: #d4edda; color: #155724; }
+        .status-pending { background: #fff3cd; color: #856404; }
+
+        .qr-container {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .qr-container img {
+            max-width: 200px;
+            margin: 15px 0;
+        }
+
+        .share-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .share-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            color: white;
+            text-decoration: none;
+            text-align: center;
+        }
+
+        .whatsapp-btn { background: #25D366; }
+        .copy-btn { background: #4a90e2; }
+        .preview-btn { background: #ff9800; }
+
+        .message {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .message.show {
+            display: block;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4CAF50;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>✨ Event Management System ✨</h1>
+            <div class="server-status" id="serverStatus">Checking server...</div>
+        </div>
+
+        <div class="nav">
+            <button class="nav-btn active" onclick="showTab('dashboard', this)">📊 Dashboard</button>
+            <button class="nav-btn" onclick="showTab('create', this)">📅 Create Event</button>
+            <button class="nav-btn" onclick="showTab('events', this)">📋 Events</button>
+            <button class="nav-btn" onclick="showTab('add', this)">➕ Add Guest</button>
+            <button class="nav-btn" onclick="showTab('guests', this)">👥 Guests</button>
+            <button class="nav-btn" onclick="showTab('tables', this)">🪑 Tables</button>
+        </div>
+
+        <div id="dashboard" class="section active">
+            <h2>📊 Dashboard</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Total Events</h3>
+                    <div class="number" id="totalEvents">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Guests</h3>
+                    <div class="number" id="totalGuests">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Checked In</h3>
+                    <div class="number" id="checkedIn">0</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="create" class="section">
+            <h2>📅 Create Event</h2>
+            <div class="form-group">
+                <label>Event Name</label>
+                <input type="text" id="eventName" value="Test Event">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Date</label>
+                    <input type="date" id="eventDate" value="2026-12-31">
+                </div>
+                <div class="form-group">
+                    <label>Time</label>
+                    <input type="time" id="eventTime" value="19:00">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Venue</label>
+                <input type="text" id="venue" value="Nairobi">
+            </div>
+            <h3>Card Design</h3>
+            <div class="design-grid">
+                <div class="design-option selected" onclick="selectDesign('wedding', this)">💍 Wedding</div>
+                <div class="design-option" onclick="selectDesign('birthday', this)">🎂 Birthday</div>
+                <div class="design-option" onclick="selectDesign('graduation', this)">🎓 Graduation</div>
+                <div class="design-option" onclick="selectDesign('anniversary', this)">💕 Anniversary</div>
+                <div class="design-option" onclick="selectDesign('corporate', this)">💼 Corporate</div>
+                <div class="design-option" onclick="selectDesign('party', this)">🎊 Party</div>
+            </div>
+            <button class="btn" onclick="createNewEvent()">Create Event</button>
+            <div id="createMessage" class="message"></div>
+        </div>
+
+        <div id="events" class="section">
+            <h2>📋 Events</h2>
+            <button class="btn" onclick="loadEvents()" style="margin-bottom:20px;">Refresh</button>
+            <div id="eventsList" class="events-grid"></div>
+        </div>
+
+        <div id="add" class="section">
+            <h2>➕ Add Guest</h2>
+            <div class="form-group">
+                <label>Event</label>
+                <select id="guestEvent"></select>
+            </div>
+            <div class="form-group">
+                <label>Guest Name</label>
+                <input type="text" id="guestName">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Phone</label>
+                    <input type="tel" id="guestPhone" placeholder="254712345678">
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="guestEmail">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Table</label>
+                <select id="guestTable">
+                    <option value="">No Table</option>
+                    <option value="Table 1">Table 1</option>
+                    <option value="Table 2">Table 2</option>
+                    <option value="Table 3">Table 3</option>
+                    <option value="Table 4">Table 4</option>
+                    <option value="Table 5">Table 5</option>
+                    <option value="Table 6">Table 6</option>
+                    <option value="Table 7">Table 7</option>
+                    <option value="Table 8">Table 8</option>
+                    <option value="Table 9">Table 9</option>
+                    <option value="Table 10">Table 10</option>
+                </select>
+            </div>
+            <button class="btn" onclick="addNewGuest()">Generate Invitation</button>
+            <div id="guestMessage" class="message"></div>
+            <div id="guestResult"></div>
+        </div>
+
+        <div id="guests" class="section">
+            <h2>👥 Guests</h2>
+            <div class="form-group">
+                <label>Event</label>
+                <select id="viewEvent" onchange="loadGuests()"></select>
+            </div>
+            <button class="btn btn-small" onclick="exportGuests()" style="background:#4a90e2; width:auto; margin-bottom:20px;">📥 Export</button>
+            <div id="guestsList"></div>
+        </div>
+
+        <div id="tables" class="section">
+            <h2>🪑 Tables</h2>
+            <div class="form-group">
+                <label>Event</label>
+                <select id="tableViewEvent" onchange="loadTableLayout()"></select>
+            </div>
+            <div id="tableLayout" class="table-view"></div>
+        </div>
+    </div>
+
+    <script>
+        const API = 'https://event-qr-system-7vgo.onrender.com';
+        let selectedDesign = 'wedding';
+
+        async function checkServer() {
+            try {
+                const res = await fetch(API);
+                document.getElementById('serverStatus').textContent = '✅ Server Connected';
+            } catch {
+                document.getElementById('serverStatus').textContent = '❌ Server Disconnected';
+            }
+        }
+
+        function showTab(tab, btn) {
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById(tab).classList.add('active');
+            if (tab === 'events') loadEvents();
+            if (tab === 'add' || tab === 'guests' || tab === 'tables') loadEventDropdowns();
+            if (tab === 'dashboard') loadDashboard();
+        }
+
+        function selectDesign(design, el) {
+            selectedDesign = design;
+            document.querySelectorAll('.design-option').forEach(opt => opt.classList.remove('selected'));
+            el.classList.add('selected');
+        }
+
+        async function loadDashboard() {
+            try {
+                const res = await fetch(API + '/api/stats');
+                const stats = await res.json();
+                document.getElementById('totalEvents').textContent = stats.totalEvents;
+                document.getElementById('totalGuests').textContent = stats.totalGuests;
+                document.getElementById('checkedIn').textContent = stats.checkedIn;
+            } catch (e) {}
+        }
+
+        async function loadEventDropdowns() {
+            try {
+                const res = await fetch(API + '/api/events');
+                const events = await res.json();
+                ['guestEvent', 'viewEvent', 'tableViewEvent'].forEach(id => {
+                    const select = document.getElementById(id);
+                    select.innerHTML = '<option value="">Select Event</option>';
+                    events.forEach(e => {
+                        select.innerHTML += `<option value="${e.id}">${e.event_name}</option>`;
+                    });
+                });
+            } catch (e) {}
+        }
+
+        async function createNewEvent() {
+            const msg = document.getElementById('createMessage');
+            msg.className = 'message show';
+            msg.innerHTML = 'Creating...';
+            
+            const eventData = {
+                event_name: document.getElementById('eventName').value,
+                event_date: document.getElementById('eventDate').value,
+                event_time: document.getElementById('eventTime').value + ':00',
+                venue: document.getElementById('venue').value,
+                card_design: selectedDesign
+            };
+            
+            try {
+                const res = await fetch(API + '/api/events', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(eventData)
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    msg.className = 'message success show';
+                    msg.innerHTML = '✅ Event created!';
+                    loadEventDropdowns();
+                    loadEvents();
+                    loadDashboard();
+                }
+            } catch (e) {}
+        }
+
+        async function loadEvents() {
+            const list = document.getElementById('eventsList');
+            try {
+                const res = await fetch(API + '/api/events');
+                const events = await res.json();
+                if (events.length === 0) {
+                    list.innerHTML = '<p>No events</p>';
+                    return;
+                }
+                let html = '';
+                events.forEach(e => {
+                    html += `
+                        <div class="event-card">
+                            <h3>${e.event_name}</h3>
+                            <p>Date: ${e.event_date} | Time: ${e.event_time}</p>
+                            <p>Venue: ${e.venue}</p>
+                            <div class="event-actions">
+                                <button class="btn-add" onclick="addGuestToEvent(${e.id})">➕ Add</button>
+                                <button class="btn-view" onclick="viewEventGuests(${e.id})">👥 View</button>
+                                <button class="btn-delete" onclick="deleteEvent(${e.id})">🗑️ Delete</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                list.innerHTML = html;
+            } catch (e) {}
+        }
+
+        async function deleteEvent(id) {
+            if (!confirm('Delete this event?')) return;
+            await fetch(API + `/api/events/${id}`, { method: 'DELETE' });
+            loadEvents();
+            loadEventDropdowns();
+            loadDashboard();
+        }
+
+        function addGuestToEvent(id) {
+            showTab('add', document.querySelectorAll('.nav-btn')[3]);
+            setTimeout(() => document.getElementById('guestEvent').value = id, 100);
+        }
+
+        function viewEventGuests(id) {
+            showTab('guests', document.querySelectorAll('.nav-btn')[4]);
+            setTimeout(() => {
+                document.getElementById('viewEvent').value = id;
+                loadGuests();
+            }, 100);
+        }
+
+        async function addNewGuest() {
+            const msg = document.getElementById('guestMessage');
+            const result = document.getElementById('guestResult');
+            msg.className = 'message show';
+            msg.innerHTML = 'Adding...';
+            
+            const guestData = {
+                event_id: document.getElementById('guestEvent').value,
+                name: document.getElementById('guestName').value,
+                email: document.getElementById('guestEmail').value || null,
+                phone: document.getElementById('guestPhone').value || null,
+                table_number: document.getElementById('guestTable').value || null
+            };
+            
+            if (!guestData.event_id || !guestData.name) {
+                msg.className = 'message error show';
+                msg.innerHTML = '❌ Select event and name';
+                return;
+            }
+            
+            try {
+                const res = await fetch(API + '/api/guests', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(guestData)
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    msg.className = 'message success show';
+                    msg.innerHTML = '✅ Guest added!';
+                    
+                    const phone = guestData.phone;
+                    const whatsapp = phone ? `https://wa.me/${phone.replace(/^0+/, '')}?text=${encodeURIComponent('Invitation: ' + data.inviteLink)}` : '#';
+                    
+                    result.innerHTML = `
+                        <div class="qr-container">
+                            <img src="${data.qrCode}" style="max-width:200px">
+                            <p>${guestData.name}</p>
+                            ${guestData.table_number ? `<p>Table: ${guestData.table_number}</p>` : ''}
+                            <div class="share-buttons">
+                                ${phone ? `<a href="${whatsapp}" target="_blank" class="share-btn whatsapp-btn">📱 WhatsApp</a>` : ''}
+                                <button class="share-btn copy-btn" onclick="copyLink('${data.inviteLink}')">📋 Copy</button>
+                                <button class="share-btn preview-btn" onclick="window.open('${data.inviteLink}')">👁️ Preview</button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    document.getElementById('guestName').value = '';
+                    document.getElementById('guestPhone').value = '';
+                    document.getElementById('guestEmail').value = '';
+                    document.getElementById('guestTable').value = '';
+                }
+            } catch (e) {}
+        }
+
+        async function loadGuests() {
+            const eventId = document.getElementById('viewEvent').value;
+            const list = document.getElementById('guestsList');
+            if (!eventId) {
+                list.innerHTML = '<p>Select event</p>';
+                return;
+            }
+            try {
+                const res = await fetch(API + `/api/guests/event/${eventId}`);
+                const guests = await res.json();
+                if (guests.length === 0) {
+                    list.innerHTML = '<p>No guests</p>';
+                    return;
+                }
+                let html = '';
+                guests.forEach(g => {
+                    html += `
+                        <div class="guest-item ${g.checked_in ? 'checked-in' : ''}">
+                            <div>
+                                <h4>${g.name}</h4>
+                                ${g.table_number ? `<p>🪑 ${g.table_number}</p>` : ''}
+                            </div>
+                            <span class="guest-status ${g.checked_in ? 'status-checked' : 'status-pending'}">
+                                ${g.checked_in ? '✓ Checked In' : '⏳ Pending'}
+                            </span>
+                        </div>
+                    `;
+                });
+                list.innerHTML = html;
+            } catch (e) {}
+        }
+
+        async function loadTableLayout() {
+            const eventId = document.getElementById('tableViewEvent').value;
+            const layout = document.getElementById('tableLayout');
+            if (!eventId) {
+                layout.innerHTML = '<p>Select event</p>';
+                return;
+            }
+            layout.innerHTML = '<div class="spinner"></div>';
+            try {
+                const res = await fetch(API + `/api/tables/event/${eventId}`);
+                const tables = await res.json();
+                if (tables.length === 0) {
+                    layout.innerHTML = '<p>No tables</p>';
+                    return;
+                }
+                let html = '';
+                tables.forEach(t => {
+                    html += `<div class="table-card"><h4>${t.table_number}</h4><p>Guests: ${t.guest_count}</p></div>`;
+                });
+                layout.innerHTML = html;
+            } catch (e) {}
+        }
+
+        async function exportGuests() {
+            const eventId = document.getElementById('viewEvent').value;
+            if (!eventId) {
+                alert('Select event first');
+                return;
+            }
+            window.open(API + `/api/export/guests/${eventId}`, '_blank');
+        }
+
+        function copyLink(link) {
+            navigator.clipboard.writeText(link);
+            alert('✅ Copied!');
+        }
+
+        checkServer();
+        loadEventDropdowns();
+        loadEvents();
+    </script>
+</body>
+</html>
