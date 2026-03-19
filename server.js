@@ -4,23 +4,28 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const { v4: uuidv4 } = require('uuid');
 const QRCode = require('qrcode');
+const path = require('path');
 
 const app = express();
 const port = process.env.PORT || 3000;
 
+// Middleware
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// UPDATED: Aiven MySQL Connection (no hardcoded password)
+// IMPORTANT: Serve static files (this makes admin.html work)
+app.use(express.static(__dirname));
+
+// Aiven MySQL Connection
 const db = mysql.createConnection({
     host: process.env.DB_HOST || 'mysql-22413e97-korirabraham6371-59b6.l.aivencloud.com',
     user: process.env.DB_USER || 'avnadmin',
-    password: process.env.DB_PASSWORD,  // Password only from environment variables
+    password: process.env.DB_PASSWORD, // No hardcoded password!
     database: process.env.DB_NAME || 'defaultdb',
     port: process.env.DB_PORT || 23164,
     ssl: {
-        rejectUnauthorized: false  // Important for Aiven
+        rejectUnauthorized: false
     }
 });
 
@@ -244,8 +249,8 @@ app.post('/api/guests', (req, res) => {
             console.error('Error adding guest:', err);
             res.status(500).json({ error: err.message });
         } else {
-            const inviteLink = `http://localhost:${port}/invite/${unique_code}`;
-            const scanLink = `http://localhost:${port}/scan/${unique_code}`;
+            const inviteLink = `https://event-qr-system-7vgo.onrender.com/invite/${unique_code}`;
+            const scanLink = `https://event-qr-system-7vgo.onrender.com/scan/${unique_code}`;
             
             QRCode.toDataURL(inviteLink, (err, qrCodeUrl) => {
                 res.status(201).json({
@@ -362,7 +367,7 @@ app.get('/api/export/guests/:eventId', (req, res) => {
     });
 });
 
-// ==================== INVITATION PAGE ====================
+// ==================== INVITATION PAGE WITH ALL CARD DESIGNS ====================
 app.get('/invite/:code', (req, res) => {
     const sql = `
         SELECT guests.*, events.event_name, events.event_date, events.event_time, events.venue, events.card_design
@@ -413,7 +418,7 @@ app.get('/invite/:code', (req, res) => {
         }
         
         const guest = results[0];
-        const scanUrl = `http://localhost:${port}/scan/${guest.unique_code}`;
+        const scanUrl = `https://event-qr-system-7vgo.onrender.com/scan/${guest.unique_code}`;
         
         QRCode.toDataURL(scanUrl, (err, qrCodeUrl) => {
             const formattedDate = new Date(guest.event_date).toLocaleDateString('en-US', {
@@ -1050,6 +1055,7 @@ app.get('/invite/:code', (req, res) => {
                                 <p><strong>📅 ${formattedDate}</strong></p>
                                 <p><strong>⏰ ${formattedTime}</strong></p>
                                 <p><strong>📍 ${guest.venue}</strong></p>
+                                ${guest.table_number ? `<p>🪑 Table: ${guest.table_number}</p>` : ''}
                             </div>
                             
                             <div class="qr-section">
@@ -1235,6 +1241,7 @@ app.get('/scan/:code', (req, res) => {
                                     <p><strong>Event:</strong> ${guest.event_name}</p>
                                     <p><strong>Location:</strong> ${guest.venue}</p>
                                     <p><strong>Date:</strong> ${new Date(guest.event_date).toLocaleDateString()}</p>
+                                    ${guest.table_number ? `<p><strong>Table:</strong> ${guest.table_number}</p>` : ''}
                                 </div>
                                 <div class="time">
                                     Check-in successful at:<br>
